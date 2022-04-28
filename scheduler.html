@@ -11,63 +11,79 @@
     <title>Scheduler</title>
 </head>
 <body>
-    <div class="container">
-        <div class="main">
-            <div class="view">
-                <div class="navigate">
-                    <div class="nav left">
-                        <button>&#8592;</button>
-                    </div>
-                    <div class="weekday">
-                        <p>Monday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Tuesday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Wednesday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Thursday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Friday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Saturday</p>
-                    </div>
-                    <div class="weekday">
-                        <p>Sunday</p>
-                    </div>
-                    <div class="nav right">
-                        <button>&#8594;</button>
-                    </div>
-                </div>
-
-                <div class="main_table">
-                    <div class="employee">
-                        Employee
-                    </div>
-                    <div class="task_place">task1</div>
-                    <div class="task_place">task2</div>
-                    <div class="task_place">task3</div>
-                    <div class="task_place">task4</div>
-                    <div class="task_place">task5</div>
-                    <div class="task_place">task6</div>
-                    <div class="task_place">task7</div>
-
+    <div class="loading">
+        <div class="loading__logo">
+            <img src="https://www.elma-bpm.ru/upload/logos/logos.svg" alt="Logo" class="loading__img">
+            <h3 class="loading__name">Scheduler</h3>
+        </div>
+        <div class="empty"></div>
+    </div>
+    <div class="cheat_block">
+        <div class="container">
+            <div class="header">
+                <div class="header__logo">
+                    <img src="https://www.elma-bpm.ru/upload/logos/logos.svg" alt="Elma" class="logo">
+                    <h5 class="header__name">Scheduler</h5>
                 </div>
             </div>
-            <div class="backlog">
-                <h1>Backlog</h1>
-                <div class="search">
-                </div>
-                <div class="tasklist">
-                </div>
+            <div class="main">
+                <div class="view">
+                    <div class="navigate">
+                        <div class="nav left">
+                            <button>&#8592;</button>
+                        </div>
+                        <div class="nav right">
+                            <button>&#8594;</button>
+                        </div>
+                    </div>
+                    <div class="wrapper">
+                        <div class="weekdays">
+<!--                            <div class="weekdays__empty">-->
 
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Monday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Tuesday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Wednesday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Thursday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Friday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Saturday</p>-->
+<!--                            </div>-->
+<!--                            <div class="weekday">-->
+<!--                                <p>Sunday</p>-->
+<!--                            </div>-->
+                        </div>
+                        <div class="main_table">
+                            <!-- Builds from JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="backlog">
+                    <h1>Backlog</h1>
+                    <div class="backlog__search">
+                        <input type="text">
+                    </div>
+                    <div class="backlog__tasks">
+                        <!-- Builds from JS -->
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
+    <script src="dragndrop.js"></script>
+    <script src="loading.js"></script>
+    <script type="module" src="data.js"></script>
 </body>
 </html>
