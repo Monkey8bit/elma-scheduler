@@ -1,18 +1,18 @@
 const calendar = {};
 
 const months = {
-    "0": "January",
-    "1": "February",
-    "2": "March",
-    "3": "April",
-    "4": "May",
-    "5": "June",
-    "6": "July",
-    "7": "August",
-    "8": "September",
-    "9": "October",
-    "10": "November",
-    "11": "December",
+    "1": "January",
+    "2": "February",
+    "3": "March",
+    "4": "April",
+    "5": "May",
+    "6": "June",
+    "7": "July",
+    "8": "August",
+    "9": "September",
+    "10": "October",
+    "11": "November",
+    "12": "December",
 }
 
 const weekDays = {
@@ -27,10 +27,10 @@ const weekDays = {
 
 
 function buildCalendar () {
-    let monthsNumber = 11;
-    for (let mon = 0;mon <= monthsNumber;mon++) {
+    let monthsNumber = 12;
+    for (let mon = 1;mon <= monthsNumber;mon++) {
         let monthDays = new Date(2022, `${mon}`, 0).getDate()
-        calendar[mon] = {};
+        calendar[mon] = [];
         for (let day = 1;day <= monthDays;day++) {
             calendar[mon][day] = {};
         }
