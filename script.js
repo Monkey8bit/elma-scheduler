@@ -157,10 +157,8 @@ class Builder {
             taskRow.appendChild(userRow);
 
             for (let column = 0;column < dayAmount;column++) {
-                let taskText = this.scheduler.createElement("p");
                 let userTask = this.scheduler.createElement("div");
                 userTask.className = "task_place";
-                userTask.appendChild(taskText)
                 taskRow.appendChild(userTask);
             }
             this.assignTasks(userRow, taskRow);
@@ -170,9 +168,9 @@ class Builder {
 
     static buildBacklog() {
         let backlog = this.scheduler.querySelector(".backlog__tasks");
+
         for (let task of this.tasks) {
             if (!task.executor) {
-                task.description = "Some description";
                 let backTaskColumn = document.createElement("div");
                 backTaskColumn.className = "backlog__task_column";
                 backTaskColumn.innerHTML = `<strong>${task.subject}</strong>${task.description}`;
@@ -200,21 +198,30 @@ class Builder {
             let assignedTask = event.target;
             assignedTask.style.backgroundColor = "";
             let taskData = JSON.parse(event.dataTransfer.getData("text/plain"));
+            let newTask = document.createElement("div");
             let executor = JSON.parse(assignedTask.parentNode.firstChild.getAttribute("data-user"));
             let dayIndex = Array.from(assignedTask.parentNode.children).indexOf(assignedTask);
             let monthDay = Array.from(document.querySelector(".weekdays").children)[dayIndex];
             let date = monthDay.getAttribute("data-date");
+            let taskText = document.createElement("p");
+            let popup = document.createElement("div");
             this.tasks[taskData.id - 1].executor = executor.id;
             this.tasks[taskData.id - 1].planStartDate = date;
-            assignedTask.setAttribute("data-task", JSON.stringify(taskData));
-            assignedTask.classList.add("assigned");
-            assignedTask.querySelector("p").innerText = taskData.subject;
+            popup.className = "popup";
+            popup.innerText = taskData.description
+            newTask.setAttribute("data-task", JSON.stringify(taskData));
+            newTask.classList.add("assigned");
+            newTask.appendChild(taskText);
+            newTask.appendChild(popup);
+            newTask.querySelector("p").innerText = taskData.subject;
+            assignedTask.appendChild(newTask);
             console.log(this.tasks);
         }));
 
     }
 
     static simplify () {
+        this.tasks.forEach((task) => task.description = "Some description");
         let id = 1;
         for (let task of this.tasks) {
             task.id = id;
@@ -248,10 +255,16 @@ class Builder {
                     if (task.planStartDate === day.getAttribute("data-date")) {
                         while ((day = day.previousSibling) != null)
                             dayNumber++;
-                        let assignedTask = row.children[dayNumber];
-                        let assignedTaskText = assignedTask.querySelector("p");
-                        assignedTaskText.innerText = task.subject;
+                        let assignedBlock = row.children[dayNumber];
+                        let assignedTask = document.createElement("div");
+                        let popup = document.createElement("div");
+                        assignedTask.innerText = task.subject;
                         assignedTask.classList.add("assigned");
+                        popup.className = "popup";
+                        console.log(task)
+                        popup.innerText = task.description
+                        assignedTask.appendChild(popup);
+                        assignedBlock.appendChild(assignedTask)
                     }
                 }
                 let month = taskDay.getMonth();
@@ -263,4 +276,51 @@ class Builder {
 }
 
 
+async function addForm() {
+    let form = document.createElement("form");
+    let name = document.createElement("input");
+    let send = document.createElement("input");
+    let description = document.createElement("textarea");
+    let users = document.createElement("select");
+    let usersDefaultOption = document.createElement("option");
+    let startDate = document.createElement("input");
+
+    form.className = "backlog__new_task_form";
+    name.setAttribute("type", "text");
+    name.setAttribute("placeholder",  );
+    name.name = "subject";
+    send.type = "submit";
+    send.value = "Create";
+    description.name= "description";
+    description.placeholder = "Describe your task here:";
+    startDate.type = "date";
+    startDate.min = "2022-01-01";
+    startDate.max = "2022-12-31";
+    startDate.
+
+    usersDefaultOption.innerText = "(optional) Assign task to: ";
+    usersDefaultOption.selected = true;
+    usersDefaultOption.disabled = true;
+    users.appendChild(usersDefaultOption);
+
+    for (let user of await Builder.users) {
+        let userOption = document.createElement("option");
+        console.log(user)
+        userOption.innerText = `${user.firstName} ${user.surname}`;
+        userOption.setAttribute("user-id", user.id);
+        users.appendChild(userOption);
+    }
+
+
+    form.appendChild(name);
+    form.appendChild(description);
+    form.appendChild(users);
+    form.appendChild(send);
+
+    let backlog = document.querySelector(".backlog__new_task");
+    backlog.appendChild(form);
+}
+
+let addButton = document.querySelector(".backlog__new_button");
+addButton.addEventListener("click", addForm);
 Builder.build()
