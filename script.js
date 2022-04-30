@@ -114,6 +114,7 @@ class Navigate {
 
         if (this.tableComplete === true) {
                 Builder.buildTable();
+                Builder.addLogic();
             }
 
             this.tableComplete = true;
@@ -151,6 +152,7 @@ class Builder {
             userRow.className = "employee";
             taskRow.className = "user_tasks";
             userRow.innerText = user.firstName + " " + user.surname;
+            userRow.style.padding ="20px";
             userRow.setAttribute("data-user", JSON.stringify(user))
             taskRow.appendChild(userRow);
 
@@ -166,34 +168,73 @@ class Builder {
         }
     }
 
-
     static buildBacklog() {
         let backlog = this.scheduler.querySelector(".backlog__tasks");
         for (let task of this.tasks) {
-            task.description = "Some description";
-            let backTaskColumn = document.createElement("div");
-            let backTask = document.createElement("p");
-            let backTaskText = document.createElement("p");
-            backTaskColumn.className = "backlog__task_column";
-            backTask.className = "backlog__task";
-            backTask.innerText = task.subject;
-            backTaskText.innerText = task.description;
-            backTaskColumn.setAttribute("data-task", JSON.stringify(task))
-            backTaskColumn.appendChild(backTask);
-            backTaskColumn.appendChild(backTaskText);
-            backlog.appendChild(backTaskColumn);
+            if (!task.executor) {
+                task.description = "Some description";
+                let backTaskColumn = document.createElement("div");
+                backTaskColumn.className = "backlog__task_column";
+                backTaskColumn.innerHTML = `<strong>${task.subject}</strong>${task.description}`;
+                backTaskColumn.setAttribute("data-task", JSON.stringify(task))
+                backlog.appendChild(backTaskColumn);
+            }
         }
     }
 
+    static addLogic() {
+        let tasks = document.querySelectorAll(".task_place");
+
+        tasks.forEach((task) => task.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.target.style.backgroundColor = "rgba(192,255,252,0.30)";
+        }));
+
+        tasks.forEach((task) => task.addEventListener("dragleave", (event) => {
+            event.preventDefault();
+            event.target.style.backgroundColor = "";
+        }));
+
+        tasks.forEach((task) => task.addEventListener("drop", (event) => {
+            event.preventDefault();
+            let assignedTask = event.target;
+            assignedTask.style.backgroundColor = "";
+            let taskData = JSON.parse(event.dataTransfer.getData("text/plain"));
+            let executor = JSON.parse(assignedTask.parentNode.firstChild.getAttribute("data-user"));
+            let dayIndex = Array.from(assignedTask.parentNode.children).indexOf(assignedTask);
+            let monthDay = Array.from(document.querySelector(".weekdays").children)[dayIndex];
+            let date = monthDay.getAttribute("data-date");
+            this.tasks[taskData.id - 1].executor = executor.id;
+            this.tasks[taskData.id - 1].planStartDate = date;
+            assignedTask.setAttribute("data-task", JSON.stringify(taskData));
+            assignedTask.classList.add("assigned");
+            assignedTask.querySelector("p").innerText = taskData.subject;
+            console.log(this.tasks);
+        }));
+
+    }
+
+    static simplify () {
+        let id = 1;
+        for (let task of this.tasks) {
+            task.id = id;
+            id++;
+        }
+    }
 
     static async build() {
         [this.users, this.tasks] = await DataGetter.returnData();
 
+        this.simplify();
         this.fillCalendar();
         Navigate.buildWeek();
         Navigate.addLogic();
         this.buildTable();
         this.buildBacklog();
+        let loadScript = document.createElement("script");
+        loadScript.src = "./dragndrop.js";
+        document.getElementsByTagName("head")[0].appendChild(loadScript);
+        this.addLogic();
 
     }
 
@@ -208,7 +249,9 @@ class Builder {
                         while ((day = day.previousSibling) != null)
                             dayNumber++;
                         let assignedTask = row.children[dayNumber];
-                        assignedTask.style.backgroundColor = "gray";
+                        let assignedTaskText = assignedTask.querySelector("p");
+                        assignedTaskText.innerText = task.subject;
+                        assignedTask.classList.add("assigned");
                     }
                 }
                 let month = taskDay.getMonth();
