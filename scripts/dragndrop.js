@@ -32,6 +32,10 @@ backlogTasks.addEventListener(`dragover`, (event) => {
   const nextElement = (currentElement === activeElement.nextElementSibling) ?
       currentElement.nextElementSibling :
       currentElement;
-  backlogTasks.insertBefore(activeElement, nextElement);
+
+  try {
+    backlogTasks.insertBefore(activeElement, nextElement);
+  } catch (err) {}
+
 });
 

@@ -4,9 +4,19 @@ class DataGetter {
     static async getData() {
         try {
             let tasks = await fetch("https://varankin_dev.elma365.ru/" +
-                "api/extensions/2a38760e-083a-4dd0-aebc-78b570bfd3c7/script/tasks")
+                "api/extensions/2a38760e-083a-4dd0-aebc-78b570bfd3c7/script/tasks", {
+                headers :{
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "origin"
+                }
+            });
             let users = await fetch("https://varankin_dev.elma365.ru/" +
-                                        "api/extensions/2a38760e-083a-4dd0-aebc-78b570bfd3c7/script/users")
+                                        "api/extensions/2a38760e-083a-4dd0-aebc-78b570bfd3c7/script/users", {
+                    headers: {
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Headers": "origin"
+                    }
+                })
             return [await users.json(), await tasks.json()];
         } catch (error) {
             console.error(error)
@@ -35,9 +45,9 @@ class Navigate {
     static weekRow = document.querySelector(".weekdays");
     static mainTable = document.querySelector(".main_table");
     static year = 2022;
-    static monthNumber = 4;
+    static monthNumber = new Date().getMonth() + 1;
     static monthName = document.querySelector(".navigate__month h2");
-    static monthDay = 1;
+    static monthDay = new Date().getDate();
     static tableComplete = false;
     static monthChanged = false;
 
@@ -178,7 +188,6 @@ class Builder {
             userRow.className = "employee";
             taskRow.className = "user_tasks";
             userRow.innerText = user.firstName + " " + user.surname;
-            userRow.style.padding ="20px";
             userRow.setAttribute("data-user", JSON.stringify(user))
             taskRow.appendChild(userRow);
 
@@ -283,20 +292,19 @@ class Builder {
     static addSctipt () {
         let loadScript = document.createElement("script");
         loadScript.className = "dragndrop"
-        loadScript.src = "./scripts./dragndrop.js";
+        loadScript.src = "./scripts/dragndrop.js";
         document.getElementsByTagName("head")[0].appendChild(loadScript);
     }
 
     static assignTasks(user, row) {
         let userData = JSON.parse(user.getAttribute("data-user"));
         this.tasks.forEach((task) => {
-            let dayNumber = 0;
+            let dayNumber;
             if (userData.id === task.executor) {
                 let taskDay = new Date(task.planStartDate)
                 for (let day of this.weekRow.children) {
                     if (task.planStartDate === day.getAttribute("data-date")) {
-                        while ((day = day.previousSibling) != null)
-                            dayNumber++;
+                        dayNumber = Array.from(this.weekRow.children).indexOf(day);
                         let assignedBlock = row.children[dayNumber];
                         let assignedTask = document.createElement("div");
                         let popup = document.createElement("div");
