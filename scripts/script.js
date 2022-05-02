@@ -55,6 +55,12 @@ class Navigate {
     };
 
     static buildWeek(direction) {
+        if (direction === "add_task" ) {
+            this.monthDay = this.weekRow.children[1].querySelector("p").innerText;
+            if (this.monthName.innerText.includes("/")) {
+                this.monthNumber--;
+            }
+        }
         if (this.tableComplete) {
             Navigate.weekRow.innerHTML = "";
             Navigate.mainTable.innerHTML = "";
@@ -68,7 +74,7 @@ class Navigate {
                 this.monthNumber -=1;
                 let newMonth = new Date(this.year, this.monthNumber, 0);
                 daysInMonth = newMonth.getDate();
-                this.monthDay = daysInMonth + this.monthDay;
+                this.monthDay += daysInMonth;
                 this.monthChanged = true;
             }
         }
@@ -149,6 +155,26 @@ class Builder {
         for (let user of this.users) {
             let taskRow = this.scheduler.createElement("div");
             let userRow = this.scheduler.createElement("div");
+            userRow.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                event.target.style.backgroundColor = "#649c7c";
+            })
+            userRow.addEventListener("dragleave", (event) => {
+                event.preventDefault();
+                event.target.style.backgroundColor = "";
+            })
+            userRow.addEventListener("drop", (event) => {
+                event.preventDefault();
+                let taskData = JSON.parse(event.dataTransfer.getData("text/plain"));
+                let taskId = event.dataTransfer.getData("id");
+                let taskToDelete = document.getElementById(taskId);
+                this.tasks[taskData.id - 1].executor = JSON.parse(event.target.getAttribute("data-user")).id;
+                this.tasks[taskData.id - 1].planStartDate = taskData.planStartDate;
+                event.target.style.backgroundColor = "";
+                this.tasks.push(taskData);
+                taskToDelete.remove();
+                Navigate.buildWeek("add_task")
+            })
             userRow.className = "employee";
             taskRow.className = "user_tasks";
             userRow.innerText = user.firstName + " " + user.surname;
@@ -168,14 +194,17 @@ class Builder {
 
     static buildBacklog() {
         let backlog = this.scheduler.querySelector(".backlog__tasks");
+        let task_id = 1;
 
         for (let task of this.tasks) {
             if (!task.executor) {
                 let backTaskColumn = document.createElement("div");
                 backTaskColumn.className = "backlog__task_column";
                 backTaskColumn.innerHTML = `<strong>${task.subject}</strong>${task.description}`;
+                backTaskColumn.id = task_id;
                 backTaskColumn.setAttribute("data-task", JSON.stringify(task))
                 backlog.appendChild(backTaskColumn);
+                task_id++;
             }
         }
     }
@@ -205,6 +234,9 @@ class Builder {
             let date = monthDay.getAttribute("data-date");
             let taskText = document.createElement("p");
             let popup = document.createElement("div");
+            let taskId = event.dataTransfer.getData("id");
+            let taskToDelete = document.getElementById(taskId);
+            taskToDelete.remove();
             this.tasks[taskData.id - 1].executor = executor.id;
             this.tasks[taskData.id - 1].planStartDate = date;
             popup.className = "popup";
@@ -215,7 +247,6 @@ class Builder {
             newTask.appendChild(popup);
             newTask.querySelector("p").innerText = taskData.subject;
             assignedTask.appendChild(newTask);
-            console.log(this.tasks);
         }));
 
     }
@@ -226,6 +257,12 @@ class Builder {
         for (let task of this.tasks) {
             task.id = id;
             id++;
+            delete task.status;
+            delete task.creationAuthor;
+            delete task.order;
+            delete task.planEndDate;
+            delete task.endDate;
+            delete task.creationDate;
         }
     }
 
@@ -238,11 +275,16 @@ class Builder {
         Navigate.addLogic();
         this.buildTable();
         this.buildBacklog();
-        let loadScript = document.createElement("script");
-        loadScript.src = "./dragndrop.js";
-        document.getElementsByTagName("head")[0].appendChild(loadScript);
+        this.addSctipt();
         this.addLogic();
 
+    }
+
+    static addSctipt () {
+        let loadScript = document.createElement("script");
+        loadScript.className = "dragndrop"
+        loadScript.src = "./scripts./dragndrop.js";
+        document.getElementsByTagName("head")[0].appendChild(loadScript);
     }
 
     static assignTasks(user, row) {
@@ -261,7 +303,6 @@ class Builder {
                         assignedTask.innerText = task.subject;
                         assignedTask.classList.add("assigned");
                         popup.className = "popup";
-                        console.log(task)
                         popup.innerText = task.description
                         assignedTask.appendChild(popup);
                         assignedBlock.appendChild(assignedTask)
@@ -269,12 +310,16 @@ class Builder {
                 }
                 let month = taskDay.getMonth();
                 let day = taskDay.getDate();
+                for (let taskId of calendar[month + 1][day][userData.id]) {
+                    if (taskId.id === task.id) {
+                        return;
+                    }
+                }
                 calendar[month + 1][day][userData.id].push(task);
             }
         })
     }
 }
-
 
 async function addForm() {
     let form = document.createElement("form");
@@ -286,17 +331,23 @@ async function addForm() {
     let startDate = document.createElement("input");
 
     form.className = "backlog__new_task_form";
-    name.setAttribute("type", "text");
-    name.setAttribute("placeholder",  );
+    name.type = "text";
+    name.placeholder = "Task subject:";
     name.name = "subject";
+    send.className = "createTask";
     send.type = "submit";
+    form.addEventListener("submit", addTask)
     send.value = "Create";
-    description.name= "description";
+    description.name = "description";
     description.placeholder = "Describe your task here:";
+    description.style.resize = "none";
+    startDate.name = "planStartDate"
     startDate.type = "date";
     startDate.min = "2022-01-01";
     startDate.max = "2022-12-31";
-    startDate.
+    let today = new Date();
+    //Sorry for that
+    startDate.defaultValue = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     usersDefaultOption.innerText = "(optional) Assign task to: ";
     usersDefaultOption.selected = true;
@@ -305,22 +356,77 @@ async function addForm() {
 
     for (let user of await Builder.users) {
         let userOption = document.createElement("option");
-        console.log(user)
         userOption.innerText = `${user.firstName} ${user.surname}`;
         userOption.setAttribute("user-id", user.id);
         users.appendChild(userOption);
     }
 
-
     form.appendChild(name);
     form.appendChild(description);
     form.appendChild(users);
+    form.appendChild(startDate);
     form.appendChild(send);
 
     let backlog = document.querySelector(".backlog__new_task");
     backlog.appendChild(form);
 }
 
+function addTask (event) {
+    event.preventDefault();
+    let newTask = document.querySelector(".backlog__new_task_form");
+    let executor = newTask.querySelector("select").selectedIndex === 0 ?
+          null : newTask.querySelector("select").selectedIndex;
+    let formData = new FormData(event.target);
+    let tasks = document.querySelector(".backlog__tasks");
+    let newTaskIndex = tasks.children.length + 1;
+    let lastTask = tasks.lastChild;
+    let taskIndex = JSON.parse(lastTask.getAttribute("data-task")).id + 1;
+    let newBacklogTask = document.createElement("div");
+    let taskData = {
+        "id": taskIndex,
+        "subject": formData.get("subject"),
+        "description": formData.get("description"),
+        "executor": executor,
+        "planStartDate": formData.get("planStartDate")
+    };
+
+    if (taskData.executor) {
+        Builder.tasks.push(taskData);
+        console.log(taskData)
+        Navigate.buildWeek("add_task");
+        event.target.remove();
+    } else {
+        newBacklogTask.className = "backlog__task_column";
+        newBacklogTask.innerHTML = `<strong>${formData.get("subject")}</strong>${formData.get("description")}`;
+        newBacklogTask.id = newTaskIndex;
+        newBacklogTask.setAttribute("data-task", JSON.stringify(taskData));
+        tasks.appendChild(newBacklogTask);
+        event.target.remove();
+        let script = document.querySelector(".dragndrop");
+        Builder.tasks.push(taskData);
+        script.remove();
+        Builder.addSctipt();
+    }
+}
+
+function search() {
+    let input = document.querySelector(".backlog__search input").value.toLowerCase();
+    let tasks = document.querySelectorAll(".backlog__task_column");
+
+    for (let i = 0; i < tasks.length; i++) {
+        let task = tasks[i]
+        if (!task.innerHTML.toLowerCase().includes(input)) {
+            task.style.display = "none";
+        } else {
+            task.style.display = "flex";
+        }
+    }
+}
+
+let searchInput = document.querySelector(".backlog__search input");
+searchInput.addEventListener("keyup", search)
 let addButton = document.querySelector(".backlog__new_button");
 addButton.addEventListener("click", addForm);
-Builder.build()
+Builder.build();
+
+
