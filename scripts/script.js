@@ -241,7 +241,7 @@ class Builder {
             this.tasks[taskData.id - 1].planStartDate = date;
             popup.className = "popup";
             popup.innerText = taskData.description
-            newTask.setAttribute("data-task", JSON.stringify(taskData));
+            newTask.setAttribute("data-task", JSON.stringify(date));
             newTask.classList.add("assigned");
             newTask.appendChild(taskText);
             newTask.appendChild(popup);
@@ -305,7 +305,10 @@ class Builder {
                         popup.className = "popup";
                         popup.innerText = task.description
                         assignedTask.appendChild(popup);
-                        assignedBlock.appendChild(assignedTask)
+                        let length = assignedBlock.children.length
+                        length >= 4 ?
+                            alert(`${userData.firstName} ${userData.surname} is not a robot, this employee already have ${length} tasks on ${task.planStartDate}`) :
+                            assignedBlock.appendChild(assignedTask);
                     }
                 }
                 let month = taskDay.getMonth();
@@ -392,7 +395,6 @@ function addTask (event) {
 
     if (taskData.executor) {
         Builder.tasks.push(taskData);
-        console.log(taskData)
         Navigate.buildWeek("add_task");
         event.target.remove();
     } else {
